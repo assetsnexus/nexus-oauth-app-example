@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM"],
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["node"],
+    "paths": {
+      "@nexus/commands-client": ["../../anx-npm-modules/packages/commands-client/src/index.ts"],
+      "@nexus/commands-client/testing": ["../../anx-npm-modules/packages/commands-client/src/testing/index.ts"],
+      "@nexus/webhooks": ["../../anx-npm-modules/packages/webhooks/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts"]
+}

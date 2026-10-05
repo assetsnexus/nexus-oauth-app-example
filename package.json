@@ -1,0 +1,21 @@
+{
+  "name": "login-with-nexus-partner",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@nexus/commands-client": "file:../../anx-npm-modules/packages/commands-client",
+    "@nexus/webhooks": "file:../../anx-npm-modules/packages/webhooks"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4"
+  }
+}
