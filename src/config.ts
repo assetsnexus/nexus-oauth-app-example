@@ -7,6 +7,8 @@ export type PartnerConfig = {
   clientSecret?: string;
   redirectUri: string;
   webhookSecret: string;
+  /** App client-credentials token used by the privacy worker. Never logged. */
+  appToken?: string;
   port: number;
 };
 
@@ -24,6 +26,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): PartnerConfig 
     clientSecret: env.NEXUS_CLIENT_SECRET || undefined,
     redirectUri,
     webhookSecret,
+    appToken: env.NEXUS_APP_TOKEN || undefined,
     port: Number.isFinite(port) ? port : 8787,
   };
 }

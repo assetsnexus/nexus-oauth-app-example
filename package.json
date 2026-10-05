@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@nexus/commands-client": "file:../../anx-npm-modules/packages/commands-client",
+    "@nexus/privacy": "file:../../anx-npm-modules/packages/privacy",
     "@nexus/webhooks": "file:../../anx-npm-modules/packages/webhooks"
   },
   "devDependencies": {

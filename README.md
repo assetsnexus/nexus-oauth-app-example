@@ -30,6 +30,7 @@ Build the SDK packages first, then install and start:
 ```bash
 npm run build --prefix ../../anx-npm-modules/packages/commands-client
 npm run build --prefix ../../anx-npm-modules/packages/webhooks
+npm run build --prefix ../../anx-npm-modules/packages/privacy
 npm install
 ```
 
@@ -44,6 +45,8 @@ npm start
 ```
 
 Open http://127.0.0.1:8787. Point the Nexus app webhook at `http://127.0.0.1:8787/api/webhooks/nexus`.
+
+Set `NEXUS_APP_TOKEN` to an app client-credentials token when this process should honour privacy requests. The BFF then runs `@nexus/privacy`: it acknowledges `privacy_request.created`, uploads an access export or erases the local grant mirror, and completes review requests after `completeReview`. `account.erased` drops the mirrored grants. The token is not written to logs.
 
 `NEXUS_PORTAL_ORIGIN` is the portal the user approves on. Region approval links are paths (`/oauth/permission-requests/<id>`); the BFF turns them into `http:` or `https:` URLs on that origin before the browser opens them. The session cookie is `HttpOnly` and is `Secure` when the request host is not localhost.
 

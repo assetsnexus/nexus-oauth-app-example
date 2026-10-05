@@ -8,7 +8,11 @@ import {
 } from '@nexus/webhooks';
 import type { PartnerLogger, PartnerState } from './state.js';
 
-export function partnerWebhookHandlers(state: PartnerState, logger: PartnerLogger): WebhookHandlers {
+export function partnerWebhookHandlers(
+  state: PartnerState,
+  logger: PartnerLogger,
+  privacy?: { handleEvent(envelope: NexusWebhookPayload): Promise<unknown> },
+): WebhookHandlers {
   return {
     'grant.revoked': (payload) => {
       state.revokeGrant(payload.data.grantId);
@@ -26,9 +30,18 @@ export function partnerWebhookHandlers(state: PartnerState, logger: PartnerLogge
       state.recordDecision(payload.data.requestId);
       logger.info('webhook_permission_decided', { requestId: payload.data.requestId });
     },
-    'account.erased': (payload) => {
+    'account.erased': async (payload) => {
       const removed = state.eraseSubjects(payload.data.grantIds, payload.data.subs);
       logger.info('webhook_account_erased', { grants: payload.data.grantIds.length, removed });
+      await privacy?.handleEvent(payload);
+    },
+    'privacy_request.created': async (payload) => {
+      logger.info('webhook_privacy_request_created', { requestId: payload.data.requestId, type: payload.data.type });
+      await privacy?.handleEvent(payload);
+    },
+    'privacy_request.cancelled': async (payload) => {
+      logger.info('webhook_privacy_request_cancelled', { requestId: payload.data.requestId });
+      await privacy?.handleEvent(payload);
     },
   };
 }

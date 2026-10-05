@@ -84,6 +84,18 @@ export class PartnerState {
     }
   }
 
+  exportSubject(sub: string): Array<Pick<GrantMirror, 'grantId' | 'sub' | 'grantedFields' | 'regulatoryStatus' | 'revoked'>> {
+    return [...this.grants.values()]
+      .filter((row) => row.sub === sub)
+      .map((row) => ({
+        grantId: row.grantId,
+        sub: row.sub,
+        grantedFields: row.grantedFields,
+        regulatoryStatus: row.regulatoryStatus,
+        revoked: row.revoked,
+      }));
+  }
+
   /** Drops every mirrored grant listed or held by one of the erased pairwise subjects. */
   eraseSubjects(grantIds: string[], subs: string[]): number {
     const ids = new Set(grantIds);

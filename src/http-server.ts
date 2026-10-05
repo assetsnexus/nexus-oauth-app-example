@@ -7,6 +7,7 @@ import { createIdempotencyStore } from '@nexus/webhooks';
 import type { PartnerConfig } from './config.js';
 import { mapPartnerError, PartnerService } from './partner-service.js';
 import { createPartnerLogger, PartnerState } from './state.js';
+import { createPartnerPrivacyKit } from './privacy-kit.js';
 import { partnerWebhookHandlers, receiveNexusWebhook } from './webhook-receiver.js';
 
 const publicDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../public');
@@ -15,6 +16,7 @@ const COOKIE = 'nx_partner';
 export type PartnerApp = {
   state: PartnerState;
   service: PartnerService;
+  privacy?: { tick: () => Promise<unknown>; reconcile: () => Promise<unknown> };
   handle: (req: IncomingMessage, res: ServerResponse) => Promise<void>;
 };
 
@@ -86,7 +88,10 @@ export function createPartnerApp(config: PartnerConfig): PartnerApp {
     state,
     logger,
   });
-  const handlers = partnerWebhookHandlers(state, logger);
+  const privacy = config.appToken
+    ? createPartnerPrivacyKit({ issuer: config.issuer, appToken: config.appToken, state, logger })
+    : undefined;
+  const handlers = partnerWebhookHandlers(state, logger, privacy);
 
   async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const url = new URL(req.url || '/', 'http://127.0.0.1');
@@ -189,7 +194,7 @@ export function createPartnerApp(config: PartnerConfig): PartnerApp {
     }
   }
 
-  return { state, service, handle };
+  return { state, service, privacy, handle };
 }
 
 export function listen(config: PartnerConfig) {
@@ -197,6 +202,19 @@ export function listen(config: PartnerConfig) {
   const server = createServer((req, res) => {
     void app.handle(req, res);
   });
+  if (app.privacy) {
+    const kit = app.privacy;
+    const timer = setInterval(() => {
+      void kit.tick().catch((err: unknown) => {
+        console.warn(JSON.stringify({ level: 'warn', message: 'privacy_tick_failed', detail: err instanceof Error ? err.message : 'tick failed' }));
+      });
+      void kit.reconcile().catch((err: unknown) => {
+        console.warn(JSON.stringify({ level: 'warn', message: 'privacy_reconcile_failed', detail: err instanceof Error ? err.message : 'reconcile failed' }));
+      });
+    }, 60_000);
+    timer.unref?.();
+    server.on('close', () => clearInterval(timer));
+  }
   return new Promise<ReturnType<typeof createServer>>((resolve) => {
     server.listen(config.port, () => resolve(server));
   });

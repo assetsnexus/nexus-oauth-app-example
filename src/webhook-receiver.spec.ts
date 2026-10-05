@@ -75,6 +75,29 @@ describe('receiveNexusWebhook', () => {
     expect(calls).toBe(2);
   });
 
+  it('hands a privacy request to the kit once', async () => {
+    const seen: string[] = [];
+    const state = new PartnerState();
+    const handlers = partnerWebhookHandlers(state, { info() {}, warn() {} }, {
+      async handleEvent(envelope) {
+        seen.push(envelope.eventId);
+      },
+    });
+    const payload = signed(JSON.stringify({
+      eventId: 'e-privacy',
+      event: 'privacy_request.created',
+      eventVersion: 1,
+      clientId: 'client-1',
+      at: '2026-10-05T12:00:00.000Z',
+      data: { requestId: 'req-1', type: 'access', sub: 'pairwise', grantId: 'g1', dueAt: '2026-11-05T12:00:00.000Z' },
+    }));
+    const store = createIdempotencyStore();
+    const req = { rawBody: payload.body, headers: { 'x-nexus-signature': payload.header }, secret, handlers, idempotency: store };
+    expect((await receiveNexusWebhook(req)).status).toBe(200);
+    expect((await receiveNexusWebhook(req)).body).toEqual({ ok: true, duplicate: true });
+    expect(seen).toEqual(['e-privacy']);
+  });
+
   it('drops mirrored grants on account.erased', async () => {
     const state = new PartnerState();
     state.setFields('g1', 'pairwise-a', ['email']);
